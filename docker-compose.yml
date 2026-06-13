@@ -1,12 +1,36 @@
-# Servidor Web (Apache + PHP)
-  web:
+version: '3.8'
+
+services:
+  web:  # <-- Fíjate que tiene 2 espacios de sangría con respecto a 'services'
     image: php:8.2-apache
     container_name: tp_apache_web
     ports:
       - "8080:80"
     volumes:
-      - ./html:/var/www/html/  # <-- OJO: Nota que la ruta interna cambió a /var/www/html/
+      - ./html:/var/www/html/
     networks:
       - tp-network
     depends_on:
       - db
+
+  db:   # <-- Fíjate que está alineado exactamente igual que 'web'
+    image: mysql:8.0
+    container_name: tp_mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: tp_database
+      MYSQL_USER: tp_user
+      MYSQL_PASSWORD: user_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - tp-network
+
+volumes:
+  db_data:
+
+networks:
+  tp-network:
+    driver: bridge
