@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Gerencial — Plataformas UEICEE · Mayo 2026</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #F7F6F3;
+    --surface:   #FFFFFF;
+    --surface2:  #F0EEE9;
+    --border:    #E2DED6;
+    --border2:   #CCC9C0;
+    --text:      #1A1916;
+    --text2:     #5C5A54;
+    --text3:     #9B9890;
+    --accent:    #1B4FBB;
+    --accent-bg: #EBF0FB;
+    --red:       #C0392B; --red-bg:    #FDECEA;
+    --orange:    #B84F00; --orange-bg: #FEF3E8;
+    --yellow:    #856600; --yellow-bg: #FEFBE6;
+    --green:     #1A6B3A; --green-bg:  #EBF7EE;
+    --blue:      #1B4FBB; --blue-bg:   #EBF0FB;
+    --gray:      #5C5A54; --gray-bg:   #F0EEE9;
+    --r-sm: 6px; --r-md: 10px; --r-lg: 14px;
+    --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  }
+
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.6; min-height: 100vh; }
+
+  .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px; position: sticky; top: 0; z-index: 100; }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .header-logo { width: 34px; height: 34px; background: var(--accent); border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .header-logo svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-sub { font-size: 12px; color: var(--text3); margin-top: 1px; }
+  .header-badge { font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 99px; background: var(--accent-bg); color: var(--accent); white-space: nowrap; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 26px 32px; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+  .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 16px 18px; box-shadow: var(--shadow); }
+  .kpi-val { font-size: 30px; font-weight: 700; line-height: 1; margin-bottom: 5px; }
+  .kpi-label { font-size: 12px; color: var(--text2); line-height: 1.4; }
+  .kpi-sys { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .kpi-card.danger .kpi-val { color: var(--red); }
+  .kpi-card.warn   .kpi-val { color: var(--orange); }
+  .kpi-card.ok     .kpi-val { color: var(--green); }
+  .kpi-card.info   .kpi-val { color: var(--blue); }
+
+  .section-label { font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
+
+  .tabs-bar { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 22px; }
+  .tab-btn { padding: 9px 16px; font-size: 13px; font-weight: 500; color: var(--text3); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; margin-bottom: -1px; transition: color .15s, border-color .15s; }
+  .tab-btn:hover { color: var(--text2); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Mapa de estado: cards ── */
+  .map-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .sys-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 16px 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; }
+  .sys-card.critical { border-left: 3px solid var(--red); }
+  .sys-card.paused   { border-left: 3px solid var(--orange); }
+  .sys-card.stable   { border-left: 3px solid var(--green); }
+  .sys-card.migrating{ border-left: 3px solid var(--yellow); }
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .card-names .sigla { font-size: 10px; font-weight: 700; letter-spacing: .06em; color: var(--text3); text-transform: uppercase; }
+  .card-names .fullname { font-size: 14px; font-weight: 600; color: var(--text); margin-top: 1px; }
+  .card-sem { font-size: 20px; flex-shrink: 0; }
+  .card-estado { display: flex; align-items: center; gap: 6px; }
+  .card-avance { font-size: 12px; color: var(--text3); }
+  .avance-bar { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .avance-fill { height: 100%; border-radius: 2px; }
+  .card-risk { font-size: 12px; color: var(--text2); line-height: 1.45; }
+  .card-risk strong { color: var(--text); font-weight: 600; }
+  .card-footer { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
+  .card-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text3); border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px; }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .b-red    { background: var(--red-bg);    color: var(--red); }
+  .b-orange { background: var(--orange-bg); color: var(--orange); }
+  .b-yellow { background: var(--yellow-bg); color: var(--yellow); }
+  .b-green  { background: var(--green-bg);  color: var(--green); }
+  .b-blue   { background: var(--blue-bg);   color: var(--blue); }
+  .b-gray   { background: var(--gray-bg);   color: var(--gray); }
+
+  /* ── Roadmap ── */
+  .roadmap { display: flex; flex-direction: column; }
+  .roadmap-phase { display: grid; grid-template-columns: 106px 1fr; }
+  .phase-col { padding: 14px 18px 14px 0; border-right: 2px solid var(--border2); position: relative; }
+  .phase-dot { position: absolute; right: -6px; top: 18px; width: 10px; height: 10px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); }
+  .phase-name { font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--accent); }
+  .phase-range { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .items-col { padding: 12px 0 12px 22px; display: flex; flex-direction: column; gap: 8px; }
+  .r-item { display: flex; gap: 10px; align-items: flex-start; padding: 11px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); box-shadow: var(--shadow); }
+  .r-tag { flex-shrink: 0; font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 4px; margin-top: 1px; }
+  .r-tag.high { background: var(--red-bg);    color: var(--red); }
+  .r-tag.med  { background: var(--orange-bg); color: var(--orange); }
+  .r-tag.low  { background: var(--green-bg);  color: var(--green); }
+  .r-title { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; }
+  .r-desc  { font-size: 12px; color: var(--text2); margin-top: 2px; line-height: 1.45; }
+
+  /* ── Anexo técnico ── */
+  .anx-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 16px 18px; margin-bottom: 12px; box-shadow: var(--shadow); }
+  .anx-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .anx-chip { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 5px; background: var(--surface2); color: var(--text2); border: 1px solid var(--border); letter-spacing: .04em; }
+  .anx-name { font-size: 14px; font-weight: 600; flex: 1; }
+  .anx-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px; }
+  .anx-field label { font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text3); display: block; margin-bottom: 3px; }
+  .anx-field span { font-size: 12px; color: var(--text); line-height: 1.5; }
+  .alert-list { border-top: 1px solid var(--border); padding-top: 10px; display: flex; flex-direction: column; gap: 5px; }
+  .alert-row { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: var(--text2); }
+  .adot { flex-shrink: 0; width: 7px; height: 7px; border-radius: 50%; margin-top: 4px; }
+  .adot.r { background: var(--red); }
+  .adot.o { background: var(--orange); }
+  .adot.b { background: var(--blue); }
+
+  .footer { margin-top: 36px; padding: 14px 0; border-top: 1px solid var(--border); font-size: 11px; color: var(--text3); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+  @media (max-width: 900px) { .map-grid { grid-template-columns: repeat(2, 1fr); } .anx-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .container { padding: 14px; } .header { padding: 12px 14px; } .kpi-grid { grid-template-columns: repeat(2,1fr); } .map-grid { grid-template-columns: 1fr; } .anx-grid { grid-template-columns: 1fr; } .roadmap-phase { grid-template-columns: 80px 1fr; } }
+  @media print { .header { position: static; } .tabs-bar { display: none; } .tab-panel { display: block !important; page-break-before: always; } .sys-card, .r-item, .anx-card { break-inside: avoid; } }
+
+  /* ── Stack relevamiento ── */
+  .stack-wrap { border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; margin-top: 12px; }
+  .stack-section-title { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text3); padding: 7px 12px; background: var(--surface2); border-bottom: 1px solid var(--border); }
+  .stack-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .stack-table th { padding: 6px 12px; text-align: left; font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--text3); border-bottom: 1px solid var(--border); background: var(--surface2); }
+  .stack-table td { padding: 7px 12px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; line-height: 1.4; }
+  .stack-table tr:last-child td { border-bottom: none; }
+  .stack-table tr:hover td { background: var(--surface2); }
+  .ver-current { font-family: monospace; font-size: 12px; font-weight: 600; color: var(--text); }
+  .ver-suggested { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .crit-alta  { color: var(--red);    font-weight: 600; font-size: 11px; }
+  .crit-media { color: var(--orange); font-weight: 600; font-size: 11px; }
+  .crit-baja  { color: var(--green);  font-weight: 600; font-size: 11px; }
+  .crit-ok    { color: var(--green);  font-size: 11px; }
+  .infra-chip { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; background: var(--surface2); border: 1px solid var(--border); color: var(--text2); margin-right: 4px; margin-bottom: 3px; font-family: monospace; }
+  .stack-relevamiento-fecha { font-size: 11px; color: var(--text3); margin-left: auto; }
+
+  /* ── Decisiones pendientes ── */
+  .decisions-panel {
+    background: var(--red-bg);
+    border: 1px solid #f5c6c2;
+    border-radius: var(--r-lg);
+    padding: 16px 18px;
+    margin-bottom: 22px;
+  }
+  .decisions-panel .dp-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .decisions-panel .dp-title { font-size: 13px; font-weight: 600; color: var(--red); }
+  .decisions-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .decisions-table th { padding: 7px 12px; text-align: left; font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--red); border-bottom: 1px solid #f5c6c2; }
+  .decisions-table td { padding: 8px 12px; border-bottom: 1px solid #f5c6c2; vertical-align: top; line-height: 1.45; color: var(--text); }
+  .decisions-table tr:last-child td { border-bottom: none; }
+
+  /* ── Update date badge on cards ── */
+  .update-stale { color: var(--orange) !important; font-weight: 600; }
+  .update-old   { color: var(--red)    !important; font-weight: 600; }
+
+  /* ── Stack relevamiento badge ── */
+  .stack-badge-yes { display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:600; padding:2px 7px; border-radius:99px; background:var(--green-bg); color:var(--green); border:1px solid #b7dfc6; }
+  .stack-badge-no  { display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:600; padding:2px 7px; border-radius:99px; background:var(--gray-bg);  color:var(--gray);  border:1px solid var(--border2); }
+
+  /* ── Version badge ── */
+  .version-chip { font-size: 11px; color: var(--text3); padding: 3px 8px; border-radius: 4px; background: var(--surface2); border: 1px solid var(--border); font-family: monospace; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div class="header-logo">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    </div>
+    <div>
+      <div class="header-title">Dashboard — Ciclo de Vida de Plataformas · UEICEE</div>
+      <div class="header-sub">Ministerio de Educación GCBA · Coordinación IT · Mayo 2026</div>
+    </div>
+  </div>
+  <div class="header-badge">11 plataformas relevadas</div>
+</header>
+
+<main class="container">
+
+  <!-- KPIs -->
+  <p class="section-label">Resumen ejecutivo</p>
+  <div class="kpi-grid">
+    <div class="kpi-card danger">
+      <div class="kpi-val">2</div>
+      <div class="kpi-label">🔴 Estado crítico</div>
+      <div class="kpi-sys">SGO · SRS</div>
+    </div>
+    <div class="kpi-card warn">
+      <div class="kpi-val">4</div>
+      <div class="kpi-label">🟠 Pausados / en riesgo</div>
+      <div class="kpi-sys">SCIA · BI · SAVAP · BDU</div>
+    </div>
+    <div class="kpi-card ok">
+      <div class="kpi-val">4</div>
+      <div class="kpi-label">🟢 Estables / operativos</div>
+      <div class="kpi-sys">BTE · PEL · RaNIE · Lime</div>
+    </div>
+    <div class="kpi-card info">
+      <div class="kpi-val">8</div>
+      <div class="kpi-label">🔵 Stack relevado</div>
+      <div class="kpi-sys">SGO · SRS · BTE · PEL · SAVAP · SCIA · BDU · RaNIE</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs-bar">
+    <button class="tab-btn active" onclick="switchTab('mapa', this)">Mapa de estado</button>
+    <button class="tab-btn" onclick="switchTab('roadmap', this)">Hoja de ruta</button>
+    <button class="tab-btn" onclick="switchTab('decisiones', this)">Decisiones pendientes</button>
+    <button class="tab-btn" onclick="switchTab('anexo', this)">Anexo técnico</button>
+  </div>
+
+  <!-- ════════════════════════════════════
+       TAB 1 — MAPA DE ESTADO
+       Fuente: hojas Dashboard + Seguimiento
+  ════════════════════════════════════ -->
+  <div class="tab-panel active" id="tab-mapa">
+    <p class="section-label">Estado por plataforma — últimas actualizaciones de seguimiento</p>
+    <div class="map-grid">
+
+      <!-- SGO -->
+      <div class="sys-card critical">
+        <div class="card-top">
+          <div class="card-names"><div class="sigla">SGO</div><div class="fullname">Gestión de Operativos</div></div>
+          <div class="card-sem">🔴</div>
+        </div>
+        <div>
+          <div class="card-estado">
+            <span class="badge b-red">CRÍTICO</span>
+            <span class="card-avance">Avance: —%</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px;">Último update: <span class="update-stale">Abr 2026</span> · Logística</div>
+        </div>
+        <div class="card-risk"><strong>Riesgo:</strong> Sistema productivo con stack tecnológico deprecado. Refactorización o reingeniería necesaria para garantizar la continuidad de los operativos.</div>
+        <div class="card-footer">
+          <span class="badge b-red">Reingeniería / Migración</span>
+          <span class="badge b-gray">Contratación requerida</span>
+          <span class="stack-badge-yes">✓ Stack relevado</span>
+        </div>
+        <div class="card-meta">
+          <span>Ambientes: PRD / HML / Testing</span>
+          <span style="color:var(--orange)">Decisión pendiente</span>
+        </div>
+      </div>
+
+      <!-- SRS -->
+      <div class="sys-card critical">
+        <div class="card-top">
+          <div class="card-names"><div class="sigla">SRS</div><div class="fullname">Relevamientos de Secciones</div></div>
+          <div class="card-sem">🔴</div>
+        </div>
+        <div>
+          <div class="card-estado">
+            <span class="badge b-red">CRÍTICO</span>
+            <span class="card-avance">Avance: —%</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px;">Último update: May 2026 · Logística</div>
+        </div>
+        <div class="card-risk"><strong>Riesgo:</strong> Debe mantenerse activo con SGO en todos los operativos. Desincronización entre plataformas bloquea nuevas funcionalidades e integridad de datos.</div>
+        <div class="card-footer">
+          <span class="badge b-red">Migración / Refactorización</span>
+          <span class="badge b-gray">Evaluar contratación</span>
+          <span class="stack-badge-yes">✓ Stack relevado</span>
+        </div>
+        <div class="card-meta">
+          <span>Ambientes: PRD / HML</span>
+          <span style="color:var(--orange)">Actualización infraestructura</span>
+        </div>
+      </div>
+
+      <!-- SCIA -->
+      <div class="sys-card paused">
+        <div class="card-top">
+          <div class="card-names"><div class="sigla">SCIA</div><div class="fullname">Corrección de Ítems Abiertos</div></div>
+          <div class="card-sem">🟠</div>
+        </div>
+        <div>
+          <div class="card-estado">
+            <span class="badge b-orange">PAUSADO</span>
+            <span class="card-avance">Avance: 90%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:5px;">
+            <div class="avance-bar"><div class="avance-fill" style="width:90%;background:var(--orange)"></div></div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px;">Último update: 04/05/2026 · PENDIENTE asignación</div>
+        </div>
+        <div class="card-risk"><strong>Riesgo:</strong> Debe estar en producción antes de FEPBA/TESBA. Falta migración de imágenes v1.0 y aceptación final de todos los actores.</div>
+        <div class="card-footer">
+          <span class="badge b-orange">Finalizar y pasar a PRD</span>
+          <span class="badge b-gray">Contratación externa JS</span>
+          <span class="stack-badge-yes">✓ Stack relevado</span>
+        </div>
+        <div class="card-meta">
+          <span>Ambientes: PRD / HML / v. anterior</span>
+          <span style="color:var(--red)">Aceptación pendiente</span>
+        </div>
+      </div>
+
+      <!-- BI -->
+      <div class="sys-card paused">
+        <div class="card-top">
+          <div class="card-names"><div class="sigla">BI</div><div class="fullname">Banco de Ítems</div></div>
+          <div class="card-sem">🟠</div>
+        </div>
+        <div>
+          <div class="card-estado">
+            <span class="badge b-orange">PAUSADO</span>
+            <span class="card-avance">Avance: 75%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:5px;">
+            <div class="avance-bar"><div class="avance-fill" style="width:75%;background:var(--orange)"></div></div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px;">Último update: <span class="update-old">Feb 2026</span> · PENDIENTE asignación</div>
+        </div>
+        <div class="card-risk"><strong>Riesgo:</strong> Inversión en riesgo. El 25% restante está bloqueado esperando que UEICEE defina cambios sobre métricas (Factores Psicométricos).</div>
+        <div class="card-footer">
+          <span class="badge b-orange">Completar desarrollo</span>
+          <span class="badge b-gray">Contratación externa JS</span>
+          <span class="stack-badge-no">⚠ Sin relevamiento</span>
+        </div>
+        <div class="card-meta">
+          <span>Ambientes: requiere gestión</span>
+          <span style="color:var(--red)">Definiciones pendientes</span>
+        </div>
+      </div>
+
+      <!-- SAVAP -->
+      <div class="sys-card paused">
+        <div class="card-top">
+          <div class="card-names"><div class="sigla">SAVAP</div><div class="fullname">Asignación de Veedores y Aplicadores</div></div>
+          <div class="card-sem">🟠</div>
+        </div>
+        <div>
+          <div class="card-estado">
+            <span class="badge b-orange">PAUSADO</span>
+            <span class="card-avance">Avance: —%</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px;">Logística · Sin ambiente de testing</div>
+        </div>
+        <div class="card-risk"><strong>Riesgo:</strong> Bloqueante en operativos Aprender si falla. Infraestructura desactualizada. Cambios directamente en PRD sin posibilidad de prueba previa.</div>
+        <div class="card-footer">
+          <span class="badge b-orange">Refactorización</span>
+          <span class="badge b-gray">Evaluar contratación</span>
+          <span class="stack-badge-yes">✓ Stack relevado</span>
+        </div>
+        <div class="card-meta">
+          <span>Ambientes: solo PRD</span>
+          <span style="color:var(--red)">Plan de refactorización pendiente</span>
+        </div>
+      </div>
+
+      <!-- BDU -->
+      <div class="sys-card migrating">
+        <div class="card-top">
+          <div class="card-names"><div class="sigla">BDU</div><div class="fullname">Biblioteca Digital de Evaluación</div></div>
+          <div class="card-sem">🟡</div>
+        </div>
+        <div>
+          <div class="card-estado">
+            <span class="badge b-yellow">MIGRACIÓN ACTIVA</span>
+            <span class="card-avance">Inicio: 20/04/2026</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px;">Último update: May 2026 · Saulo / Gabriel</div>
+        </div>
+        <div class="card-risk"><strong>Riesgo:</strong> Stack actual deprecado durante el período de transición. Sin ambiente de desarrollo para ejecutar la migración de forma segura.</div>
+        <div class="card-footer">
+          <span class="badge b-yellow">Migración en curso</span>
+          <span class="badge b-green">Sin contratación adicional</span>
+          <span class="stack-badge-yes">✓ Stack relevado</span>
+        </div>
+        <div class="card-meta">
+          <span>Ambientes: solo PRD · Entrega: 01/09/2026</span>
+        </div>
+      </div>
+
+      <!-- BTE -->
+      <div class="sys-card stable">
+        <div class="card-top">
+          <div class="card-names"><div class="sigla">BTE</div><div class="fullname">Boletín Tu Escuela</div></div>
+          <div class="card-sem">🟢</div>
+        </div>
+        <div>
+          <div class="card-estado">
+            <span class="badge b-green">ESTABLE</span>
+            <span class="card-avance">Avance: 100%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:5px;">
+            <div class="avance-bar"><div class="avance-fill" style="width:100%;background:var(--green)"></div></div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px;">Último update: May 2026 · PENDIENTE asignación</div>
+        </div>
+        <div class="card-risk"><strong>Próximo paso:</strong> Finalizar validación funcional e implementar fix de datos erróneos del ciclo 2026. Asignar responsable de seguimiento.</div>
+        <div class="card-footer">
+          <span class="badge b-blue">Mantenimiento + fix</span>
+          <span class="badge b-gray">1 mes</span>
+          <span class="stack-badge-yes">✓ Stack relevado</span>
+        </div>
+        <div class="card-meta">
+          <span>Ambientes: PRD / HML</span>
+          <span style="color:var(--orange)">Aprobar release final</span>
+        </div>
+      </div>
+
+      <!-- PEL -->
+      <div class="sys-card stable">
+        <div class="card-top">
+          <div class="card-names"><div class="sigla">PEL</div><div class="fullname">Plataforma de Evaluaciones en Línea</div></div>
+          <div class="card-sem">🟢</div>
+        </div>
+        <div>
+          <div class="card-estado">
+            <span class="badge b-green">ESTABLE</span>
+            <span class="card-avance">Avance: 100%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:5px;">
+            <div class="avance-bar"><div class="avance-fill" style="width:100%;background:var(--green)"></div></div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px;">PENDIENTE asignación responsable</div>
+        </div>
+        <div class="card-risk"><strong>Atención:</strong> Falta definir responsable de seguimiento y evaluar la seguridad de accesos, que compromete la integridad y confidencialidad de las evaluaciones.</div>
+        <div class="card-footer">
+          <span class="badge b-orange">Mantenimiento evolutivo</span>
+          <span class="stack-badge-yes">✓ Stack relevado</span>
+        </div>
+        <div class="card-meta">
+          <span>Ambientes: PRD / HML</span>
+          <span style="color:var(--orange)">Mejoras y mantenimiento</span>
+        </div>
+      </div>
+
+      <!-- RaNIE -->
+      <div class="sys-card stable">
+        <div class="card-top">
+          <div class="card-names"><div class="sigla">RaNIE</div><div class="fullname">Nueva Infraestructura Escolar</div></div>
+          <div class="card-sem">🟢</div>
+        </div>
+        <div>
+          <div class="card-estado">
+            <span class="badge b-green">ESTABLE</span>
+            <span class="card-avance">Avance: 100%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:5px;">
+            <div class="avance-bar"><div class="avance-fill" style="width:100%;background:var(--green)"></div></div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px;">Último update: <span class="update-old">Ene 2026</span> · Martín Moroni</div>
+        </div>
+        <div class="card-risk"><strong>Estado:</strong> Fix menor en curso. Chatbot IA y APIs externas pausados hasta validar calidad de datos cargados. Bajo riesgo operativo.</div>
+        <div class="card-footer">
+          <span class="badge b-green">Mantenimiento</span>
+          <span class="badge b-green">Equipo interno</span>
+          <span class="stack-badge-yes">✓ Stack relevado</span>
+        </div>
+        <div class="card-meta">
+          <span>Ambientes: PRD / HML</span>
+          <span style="color:var(--green)">Continuo</span>
+        </div>
+      </div>
+
+      <!-- Lime -->
+      <div class="sys-card stable">
+        <div class="card-top">
+          <div class="card-names"><div class="sigla">Lime</div><div class="fullname">LimeSurvey — Encuestas</div></div>
+          <div class="card-sem">🟢</div>
+        </div>
+        <div>
+          <div class="card-estado">
+            <span class="badge b-green">ESTABLE</span>
+            <span class="card-avance">Avance: 100%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:5px;">
+            <div class="avance-bar"><div class="avance-fill" style="width:100%;background:var(--green)"></div></div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px;">GabrielG · Actualizado</div>
+        </div>
+        <div class="card-risk"><strong>Estado:</strong> Sistema actualizado, sin deuda técnica identificada. Riesgo mínimo. Monitoreo preventivo periódico suficiente.</div>
+        <div class="card-footer">
+          <span class="badge b-green">Mantenimiento preventivo</span>
+          <span class="badge b-green">Equipo interno</span>
+          <span class="stack-badge-no">⚠ Sin relevamiento</span>
+        </div>
+        <div class="card-meta">
+          <span>Ambientes: PRD</span>
+          <span style="color:var(--green)">Continuo</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       TAB 2 — HOJA DE RUTA
+       Fuente: Opciones Estratégicas + Seguimiento
+  ════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-roadmap">
+    <p class="section-label">Acciones priorizadas por horizonte temporal</p>
+    <div class="roadmap">
+
+      <div class="roadmap-phase">
+        <div class="phase-col">
+          <div class="phase-dot"></div>
+          <div class="phase-name">Inmediato</div>
+          <div class="phase-range">0 – 1 mes</div>
+        </div>
+        <div class="items-col">
+          <div class="r-item">
+            <span class="r-tag high">CRÍTICO</span>
+            <div>
+              <div class="r-title">Iniciar gestión de contratación para refactorización / reingeniería de SGO</div>
+              <div class="r-desc">Stack tecnológico deprecado. Requiere refactorización completa o nuevo desarrollo que incorpore todos los requerimientos. Decisión de gerencia necesaria para iniciar el proceso.</div>
+            </div>
+          </div>
+          <div class="r-item">
+            <span class="r-tag high">CRÍTICO</span>
+            <div>
+              <div class="r-title">Evaluar relevamiento y definir plan de migración de SRS</div>
+              <div class="r-desc">Auditoría de librerías deprecadas y servicios. La interoperabilidad con SGO es un requisito no negociable para garantizar la continuidad de los operativos.</div>
+            </div>
+          </div>
+          <div class="r-item">
+            <span class="r-tag high">URGENTE</span>
+            <div>
+              <div class="r-title">Validar funcionalidades y aprobar release de BTE para ciclo lectivo 2026</div>
+              <div class="r-desc">Asignar responsable de seguimiento (UEICEE). Corregir datos erróneos del ciclo actual. Generar historia de usuario para el fix de escuelas similares.</div>
+            </div>
+          </div>
+          <div class="r-item">
+            <span class="r-tag high">URGENTE</span>
+            <div>
+              <div class="r-title">Definir requerimientos faltantes de SCIA y BI para desbloquear cierre</div>
+              <div class="r-desc">Ambos sistemas deben llegar a producción antes de FEPBA/TESBA. La demora de definiciones por parte de UEICEE bloquea al proveedor externo y pone en riesgo el contrato vigente.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="roadmap-phase">
+        <div class="phase-col">
+          <div class="phase-dot"></div>
+          <div class="phase-name">Corto</div>
+          <div class="phase-range">1 – 3 meses</div>
+        </div>
+        <div class="items-col">
+          <div class="r-item">
+            <span class="r-tag high">URGENTE</span>
+            <div>
+              <div class="r-title">Pase a producción de SCIA — completar aceptación y testeos</div>
+              <div class="r-desc">Finalizar migración de imágenes desde versión 1.0. Completar testeos de funcionalidades implementadas y obtener aceptación formal de todos los actores involucrados.</div>
+            </div>
+          </div>
+          <div class="r-item">
+            <span class="r-tag high">URGENTE</span>
+            <div>
+              <div class="r-title">Pase a producción de BI — definir equipo y completar 25% restante</div>
+              <div class="r-desc">Solicitar ambiente de desarrollo a infraestructura. Definir qué cambios requieren las métricas psicométricas pendientes. Testeo y aceptación de funcionalidades.</div>
+            </div>
+          </div>
+          <div class="r-item">
+            <span class="r-tag med">ALTO</span>
+            <div>
+              <div class="r-title">Implementar control de accesos y congelamiento de operativos en PEL</div>
+              <div class="r-desc">Garantizar la integridad y confidencialidad de las evaluaciones. Generar documento que defina todos los procesos para implementar operativos validando el flujo completo.</div>
+            </div>
+          </div>
+          <div class="r-item">
+            <span class="r-tag med">ALTO</span>
+            <div>
+              <div class="r-title">Reunión con SSTEDU / AZURE para homologar ambientes de plataformas</div>
+              <div class="r-desc">SAVAP y BDU no tienen ambiente de testing ni desarrollo. Es necesario coordinar con gerencia de infraestructura para habilitar los ambientes faltantes en todas las plataformas.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="roadmap-phase">
+        <div class="phase-col">
+          <div class="phase-dot"></div>
+          <div class="phase-name">Mediano</div>
+          <div class="phase-range">3 – 6 meses</div>
+        </div>
+        <div class="items-col">
+          <div class="r-item">
+            <span class="r-tag med">MEDIO</span>
+            <div>
+              <div class="r-title">Refactorización de SAVAP con documentación técnica completa</div>
+              <div class="r-desc">Auditoría de librerías deprecadas como primera acción. Crear ambiente de testing antes de cualquier cambio. Validar integración con SGO una vez refactorizado.</div>
+            </div>
+          </div>
+          <div class="r-item">
+            <span class="r-tag med">MEDIO</span>
+            <div>
+              <div class="r-title">Concluir migración de BDU · Entrega planificada: 01/09/2026</div>
+              <div class="r-desc">Ejecutar backlog y Gantt aprobados. Completar testing, documentación técnica y cierre formal del proyecto. Ajustar fechas intermedias del plan.</div>
+            </div>
+          </div>
+          <div class="r-item">
+            <span class="r-tag med">MEDIO</span>
+            <div>
+              <div class="r-title">Solicitar al proveedor manuales de uso e instructivos de implementación de operativos</div>
+              <div class="r-desc">Incluir configuración, implementación, respaldo y validación de flujos funcionales. Aplica a todas las plataformas con contrato de mantenimiento activo.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="roadmap-phase">
+        <div class="phase-col" style="border-right-color:transparent">
+          <div class="phase-dot" style="border-color:var(--border2)"></div>
+          <div class="phase-name" style="color:var(--text3)">Largo</div>
+          <div class="phase-range">6 – 12 meses</div>
+        </div>
+        <div class="items-col">
+          <div class="r-item">
+            <span class="r-tag low">NORMAL</span>
+            <div>
+              <div class="r-title">Estandarizar documentación técnica y manuales de usuario — todas las plataformas</div>
+              <div class="r-desc">Deuda transversal detectada en el 100% de los sistemas relevados. Debe incorporarse como entregable obligatorio en cualquier nuevo contrato o extensión.</div>
+            </div>
+          </div>
+          <div class="r-item">
+            <span class="r-tag low">NORMAL</span>
+            <div>
+              <div class="r-title">Evaluar habilitación del chatbot IA y APIs externas en RaNIE</div>
+              <div class="r-desc">Pausado preventivamente hasta auditoría completa de datos cargados en el sistema. Reanudar solo tras validación con el equipo UEICEE (Saulo/Milena).</div>
+            </div>
+          </div>
+          <div class="r-item">
+            <span class="r-tag low">NORMAL</span>
+            <div>
+              <div class="r-title">Adoptar modelo de gestión mixta: equipo interno + contrataciones externas específicas</div>
+              <div class="r-desc">Equipo interno para sistemas estables y de baja criticidad. Contrataciones externas acotadas para sistemas críticos y proyectos de migración complejos.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       TAB 3 — DECISIONES PENDIENTES
+  ════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-decisiones">
+    <p class="section-label">Decisiones pendientes de gerencia · Junio 2026</p>
+
+    <!-- Bloque intro -->
+    <div style="background:var(--red-bg);border:1px solid #f5c6c2;border-radius:var(--r-lg);padding:14px 18px;margin-bottom:18px;font-size:13px;color:var(--text2);line-height:1.6;">
+      Las siguientes decisiones están bloqueando el avance de los equipos técnicos y no pueden resolverse sin aval de la dirección. Se ordenan por urgencia operativa. El relevamiento de stack del 17–18/05/2026 confirma con datos concretos el nivel de riesgo de cada plataforma.
+    </div>
+
+    <!-- DECISIÓN 1 — SGO -->
+    <div class="anx-card" style="border-left:3px solid var(--red)">
+      <div class="anx-header">
+        <span class="anx-chip">SGO</span>
+        <span class="anx-name">Sistema de Gestión de Operativos</span>
+        <span class="badge b-red" style="margin-left:auto">🔴 Urgencia máxima</span>
+      </div>
+      <div class="anx-grid">
+        <div class="anx-field">
+          <label>Decisión requerida</label>
+          <span>Definir si se refactoriza el sistema actual o se construye uno nuevo. Una vez tomada esa decisión, iniciar el proceso de contratación externa.</span>
+        </div>
+        <div class="anx-field">
+          <label>Por qué ahora</label>
+          <span>El relevamiento confirmó que <strong>5 componentes están fuera de soporte</strong>: PHP 7.4 (sin soporte desde dic 2022), Symfony 4.4 (fin de vida nov 2023), Node 12 (sin soporte abr 2022), MariaDB 10.3 (EOL may 2023) y Ubuntu 20.04 (soporte finalizado abr 2025). Cada semana sin decisión es una semana más de exposición sin parches disponibles.</span>
+        </div>
+        <div class="anx-field">
+          <label>Impacto de no decidir</label>
+          <span>Una falla en SGO interrumpe por completo los operativos Aprender, FEPBA y TESBA. No hay plan de contingencia documentado ni posibilidad de rollback dado que tampoco existe ambiente de testing.</span>
+        </div>
+      </div>
+      <div class="alert-list" style="margin-top:8px">
+        <div class="alert-row"><div class="adot b"></div><span><strong>Prerequisito antes de contratar:</strong> obtener feedback del equipo de Logística sobre el uso actual de SAVAP dentro de SGO. Eso define si la contratación abarca ambos sistemas o solo SGO.</span></div>
+        <div class="alert-row"><div class="adot b"></div><span><strong>Responsable de la decisión:</strong> Gerencia · Coordinación IT · Logística</span></div>
+      </div>
+    </div>
+
+    <!-- DECISIÓN 2 — SAVAP -->
+    <div class="anx-card" style="border-left:3px solid var(--red)">
+      <div class="anx-header">
+        <span class="anx-chip">SAVAP</span>
+        <span class="anx-name">Asignación de Veedores y Aplicadores</span>
+        <span class="badge b-red" style="margin-left:auto">🔴 Urgencia máxima</span>
+      </div>
+      <div class="anx-grid">
+        <div class="anx-field">
+          <label>Decisión requerida</label>
+          <span>Definir si SAVAP continúa como sistema independiente o se reemplaza junto con SGO. Esta decisión es prerequisito para poder cerrar el alcance del contrato de SGO.</span>
+        </div>
+        <div class="anx-field">
+          <label>Por qué ahora</label>
+          <span>El relevamiento detectó <strong>5 componentes Alta</strong> en SAVAP: PHP 7.2 (sin soporte desde nov 2020), Vue 2 (EOL dic 2023), Node 10 (sin soporte abr 2021), MariaDB 10.3 (EOL) y Ubuntu 20.04 (EOL). Además, opera únicamente sobre PRD — cualquier actualización va directo a producción sin posibilidad de prueba previa. Disco al <strong>66%</strong>.</span>
+        </div>
+        <div class="anx-field">
+          <label>Impacto de no decidir</label>
+          <span>Sin decisión no se puede iniciar la refactorización de SAVAP ni cerrar el alcance de SGO. Si SAVAP falla durante un operativo Aprender, la asignación de veedores y aplicadores queda sin herramienta sin alternativa posible.</span>
+        </div>
+      </div>
+      <div class="alert-list" style="margin-top:8px">
+        <div class="alert-row"><div class="adot b"></div><span><strong>Responsable de la decisión:</strong> Gerencia · Logística</span></div>
+      </div>
+    </div>
+
+    <!-- DECISIÓN 3 — SRS -->
+    <div class="anx-card" style="border-left:3px solid var(--red)">
+      <div class="anx-header">
+        <span class="anx-chip">SRS</span>
+        <span class="anx-name">Sistema de Relevamientos de Secciones</span>
+        <span class="badge b-red" style="margin-left:auto">🔴 Urgencia alta</span>
+      </div>
+      <div class="anx-grid">
+        <div class="anx-field">
+          <label>Decisión requerida</label>
+          <span>Definir si la migración/refactorización de SRS se gestiona junto con SGO en el mismo contrato o por separado, y autorizar el relevamiento técnico completo.</span>
+        </div>
+        <div class="anx-field">
+          <label>Por qué ahora</label>
+          <span>El relevamiento confirmó <strong>stack idéntico al de SGO</strong>: PHP 7.4, Symfony 4.4, Node 10, MariaDB 10.3, Ubuntu 20.04 — todos fuera de soporte. Disco al <strong>61%</strong>. SRS debe funcionar sincronizado con SGO en cada operativo, por lo que su migración no puede planificarse de forma independiente.</span>
+        </div>
+        <div class="anx-field">
+          <label>Impacto de no decidir</label>
+          <span>La desincronización entre SRS y SGO durante un operativo compromete la integridad de los relevamientos de secciones de todas las escuelas participantes. No hay forma de agregar nuevas funcionalidades sin riesgo de regresión grave.</span>
+        </div>
+      </div>
+      <div class="alert-list" style="margin-top:8px">
+        <div class="alert-row"><div class="adot b"></div><span><strong>Responsable de la decisión:</strong> Gerencia · Logística · Coordinación IT</span></div>
+      </div>
+    </div>
+
+    <!-- DECISIÓN 4 — SCIA -->
+    <div class="anx-card" style="border-left:3px solid var(--orange)">
+      <div class="anx-header">
+        <span class="anx-chip">SCIA</span>
+        <span class="anx-name">Corrección de Ítems Abiertos</span>
+        <span class="badge b-orange" style="margin-left:auto">🟠 Urgencia alta — deadline FEPBA/TESBA</span>
+      </div>
+      <div class="anx-grid">
+        <div class="anx-field">
+          <label>Decisión requerida</label>
+          <span>Asignar un responsable dentro de UEICEE con autoridad para revisar y aprobar las funcionalidades entregadas, y fijar una fecha límite de aceptación formal con el proveedor.</span>
+        </div>
+        <div class="anx-field">
+          <label>Por qué ahora</label>
+          <span>El sistema está al <strong>90% de desarrollo</strong> (último update: 04/05/2026) pero bloqueado por validaciones pendientes de UEICEE. Hoy conviven en paralelo la versión vieja y la nueva sobre el mismo servidor, generando riesgo de inconsistencias. El relevamiento detectó MariaDB 10.3 y Ubuntu 20.04 deprecados en el entorno de desarrollo.</span>
+        </div>
+        <div class="anx-field">
+          <label>Impacto de no decidir</label>
+          <span>Si SCIA no está en producción antes de FEPBA/TESBA, el proceso de corrección de ítems abiertos queda sin herramienta. Adicionalmente, el proveedor puede cerrar el contrato considerando cumplidas sus obligaciones si UEICEE no formaliza las definiciones.</span>
+        </div>
+      </div>
+      <div class="alert-list" style="margin-top:8px">
+        <div class="alert-row"><div class="adot b"></div><span><strong>Prerequisito técnico:</strong> migrar imágenes de la versión 1.0 a la nueva arquitectura antes del pase a producción.</span></div>
+        <div class="alert-row"><div class="adot b"></div><span><strong>Responsable de la decisión:</strong> Gerencia · UEICEE (pendiente asignación de responsable operativo)</span></div>
+      </div>
+    </div>
+
+    <!-- DECISIÓN 5 — BI -->
+    <div class="anx-card" style="border-left:3px solid var(--orange)">
+      <div class="anx-header">
+        <span class="anx-chip">BI</span>
+        <span class="anx-name">Banco de Ítems</span>
+        <span class="badge b-orange" style="margin-left:auto">🟠 Urgencia alta — inversión en riesgo</span>
+      </div>
+      <div class="anx-grid">
+        <div class="anx-field">
+          <label>Decisión requerida</label>
+          <span>Designar formalmente quién en UEICEE tiene autoridad para definir los requerimientos de métricas psicométricas (Factores Psicométricos) pendientes. Sin esa persona asignada el proyecto no puede avanzar.</span>
+        </div>
+        <div class="anx-field">
+          <label>Por qué ahora</label>
+          <span>El desarrollo lleva activo desde <strong>septiembre 2024</strong> y está al <strong>75%</strong> (último update: feb 2026 — desactualizado). El proyecto está paralizado porque UEICEE no definió los requerimientos del 25% restante. Sin ambiente de desarrollo activo, el relevamiento de stack no pudo realizarse.</span>
+        </div>
+        <div class="anx-field">
+          <label>Impacto de no decidir</label>
+          <span>Si los requerimientos psicométricos llegan tarde o son inconsistentes con lo ya desarrollado, parte del 75% construido deberá reescribirse. El sistema no estará disponible para los próximos operativos FEPBA/TESBA.</span>
+        </div>
+      </div>
+      <div class="alert-list" style="margin-top:8px">
+        <div class="alert-row"><div class="adot b"></div><span><strong>Acción técnica inmediata en paralelo:</strong> solicitar habilitación de ambiente de desarrollo a infraestructura (SSTEDU/AZURE) para que el proveedor pueda retomar.</span></div>
+        <div class="alert-row"><div class="adot b"></div><span><strong>Responsable de la decisión:</strong> Gerencia · UEICEE (pendiente asignación)</span></div>
+      </div>
+    </div>
+
+    <!-- DECISIÓN 6 — BTE -->
+    <div class="anx-card" style="border-left:3px solid var(--yellow)">
+      <div class="anx-header">
+        <span class="anx-chip">BTE</span>
+        <span class="anx-name">Boletín Tu Escuela</span>
+        <span class="badge b-yellow" style="margin-left:auto">🟡 Urgencia media — ciclo lectivo 2026</span>
+      </div>
+      <div class="anx-grid">
+        <div class="anx-field">
+          <label>Decisión requerida</label>
+          <span>Designar formalmente un responsable de seguimiento dentro de UEICEE y aprobar el release con el fix de datos erróneos del ciclo 2026. Se envió mail solicitando información el 28/05/2026 — sin respuesta confirmada.</span>
+        </div>
+        <div class="anx-field">
+          <label>Por qué ahora</label>
+          <span>El sistema está al <strong>100% funcional</strong> pero con datos incorrectos del ciclo 2026 sin corregir. El relevamiento detectó CentOS 7 sin soporte desde jun 2024 y PHP 7.2 sin actualizaciones desde nov 2020. Sin responsable asignado, ninguna corrección avanza.</span>
+        </div>
+        <div class="anx-field">
+          <label>Impacto de no decidir</label>
+          <span>Los datos erróneos del ciclo 2026 llegan a directivos y supervisores afectando la credibilidad del sistema. La funcionalidad de escuelas similares sigue bloqueada por falta de historia de usuario aprobada.</span>
+        </div>
+      </div>
+      <div class="alert-list" style="margin-top:8px">
+        <div class="alert-row"><div class="adot b"></div><span><strong>Candidatos sugeridos:</strong> Leonardo Muñoz o Gabriel Garay (UEICEE) como responsable de seguimiento.</span></div>
+        <div class="alert-row"><div class="adot b"></div><span><strong>Responsable de la decisión:</strong> Gerencia · UEICEE</span></div>
+      </div>
+    </div>
+
+    <!-- DECISIÓN 7 — Ambientes / SSTEDU -->
+    <div class="anx-card" style="border-left:3px solid var(--yellow)">
+      <div class="anx-header">
+        <span class="anx-chip" style="background:var(--blue-bg);color:var(--blue);border-color:var(--blue-bg)">INFRA</span>
+        <span class="anx-name">Homologación de ambientes — SSTEDU / AZURE</span>
+        <span class="badge b-yellow" style="margin-left:auto">🟡 Urgencia media — desbloquea múltiples proyectos</span>
+      </div>
+      <div class="anx-grid">
+        <div class="anx-field">
+          <label>Decisión requerida</label>
+          <span>Convocar reunión con gerencia de SSTEDU y el equipo AZURE para homologar y habilitar los ambientes de desarrollo y testing faltantes en las plataformas del portfolio.</span>
+        </div>
+        <div class="anx-field">
+          <label>Por qué ahora</label>
+          <span>Tres proyectos activos no pueden avanzar sin ambientes separados: <strong>SAVAP</strong> (solo PRD, sin testing), <strong>BDU</strong> (migración activa sobre PRD con disco al 71%), <strong>BI</strong> (sin ambiente para retomar el 25% restante). La reunión con gerencia SSTEDU fue identificada como necesaria pero aún no fue convocada.</span>
+        </div>
+        <div class="anx-field">
+          <label>Impacto de no decidir</label>
+          <span>Cualquier actualización sobre SAVAP y BDU se aplica directamente sobre producción sin validación previa. La migración de BDU continúa sobre PRD con riesgo de pérdida de contenido. BI no puede ser relevado técnicamente ni retomado por el proveedor.</span>
+        </div>
+      </div>
+      <div class="alert-list" style="margin-top:8px">
+        <div class="alert-row"><div class="adot b"></div><span><strong>Plataformas desbloqueadas con esta decisión:</strong> SAVAP · BDU · BI</span></div>
+        <div class="alert-row"><div class="adot b"></div><span><strong>Responsable de la decisión:</strong> Gerencia UEICEE · Gerencia SSTEDU</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════════════
+       TAB 4 — ANEXO TÉCNICO
+       Fuente: Relevamiento de stack + Detalle Proyectos
+  ════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-anexo">
+    <p class="section-label">Anexo técnico — relevamiento de stack por plataforma · Mayo 2026</p>
+
+    <!-- SGO -->
+    <div class="anx-card">
+      <div class="anx-header">
+        <span class="anx-chip">SGO</span>
+        <span class="anx-name">Sistema de Gestión de Operativos</span>
+        <span class="badge b-red" style="margin-left:auto">🔴 Crítico</span>
+      </div>
+      <div class="anx-grid">
+        <div class="anx-field"><label>Situación actual</label><span>Sistema productivo con tecnología que ya no recibe soporte de seguridad. El relevamiento del 17/05/2026 confirma que todos los componentes principales están deprecados y requieren migración urgente.</span></div>
+        <div class="anx-field"><label>Qué puede pasar si no se actúa</label><span>Una falla puede interrumpir los operativos Aprender y FEPBA. Los componentes sin soporte exponen al sistema a vulnerabilidades sin posibilidad de parcharlas. Si el equipo rota, el conocimiento del sistema se pierde.</span></div>
+        <div class="anx-field"><label>Qué hay que hacer</label><span>Decidir entre refactorización o nuevo desarrollo e iniciar contratación externa. Antes de cerrar el alcance, relevar el uso de SAVAP dentro de SGO.</span></div>
+      </div>
+      <div class="stack-wrap">
+        <div class="stack-section-title" style="display:flex;align-items:center;">Relevamiento de stack tecnológico<span class="stack-relevamiento-fecha">Servidor: az-lxsgoprd · 17/05/2026 · Script v6.4.1</span></div>
+        <table class="stack-table">
+          <thead><tr><th>Componente</th><th>Versión actual</th><th>Criticidad</th><th>Acción requerida</th></tr></thead>
+          <tbody>
+            <tr><td>Sistema Operativo</td><td><span class="ver-current">Ubuntu 20.04.6 LTS</span><div class="ver-suggested">Soporte finalizado abril 2025</div></td><td><span class="crit-alta">Alta</span></td><td>Actualizar a Ubuntu 22.04 LTS</td></tr>
+            <tr><td>Servidor Web</td><td><span class="ver-current">Apache 2.4.41</span></td><td><span class="crit-media">Media</span></td><td>Evaluar Apache 2.4.62</td></tr>
+            <tr><td>Base de datos</td><td><span class="ver-current">MariaDB 10.3.39</span><div class="ver-suggested">Fin de vida: mayo 2023</div></td><td><span class="crit-alta">Alta</span></td><td>Migrar a MariaDB 10.11 LTS</td></tr>
+            <tr><td>PHP</td><td><span class="ver-current">7.4.33</span><div class="ver-suggested">Sin soporte desde dic 2022</div></td><td><span class="crit-alta">Alta</span></td><td>Migrar a PHP 8.3</td></tr>
+            <tr><td>Framework</td><td><span class="ver-current">Symfony 4.4</span><div class="ver-suggested">Fin de vida: nov 2023</div></td><td><span class="crit-alta">Alta</span></td><td>Migrar a Symfony 6.4 LTS</td></tr>
+            <tr><td>Node.js</td><td><span class="ver-current">12.22.12</span><div class="ver-suggested">Sin soporte desde abril 2022</div></td><td><span class="crit-alta">Alta</span></td><td>Actualizar a Node.js 20 LTS</td></tr>
+            <tr><td>Composer</td><td><span class="ver-current">2.7.1</span></td><td><span class="crit-ok">Ok</span></td><td>Sin acción requerida</td></tr>
+            <tr><td>Recursos servidor</td><td colspan="3">AMD EPYC 7763 · RAM: 1.1Gi / 15Gi · Disco: <strong>51%</strong> — monitorear</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="stack-wrap" style="margin-top:12px">
+        <div class="stack-section-title">Riesgos de seguridad identificados</div>
+        <table class="stack-table">
+          <thead><tr><th style="width:22%">Componente</th><th style="width:30%">Qué significa en la práctica</th><th style="width:26%">Riesgo concreto</th><th style="width:22%">Marco de referencia</th></tr></thead>
+          <tbody>
+            <tr><td><span class="ver-current">PHP 7.4 · Symfony 4.4 · Node 12</span></td><td>Tres componentes del núcleo sin soporte desde 2022–2023. No reciben actualizaciones de seguridad.</td><td>Cualquier vulnerabilidad descubierta no tiene parche disponible. El sistema queda expuesto de forma permanente.</td><td><span class="badge b-red" style="font-size:10px">Componentes sin soporte</span><div style="font-size:11px;color:var(--text3);margin-top:3px">OWASP A06 — componentes vulnerables</div></td></tr>
+            <tr><td><span class="ver-current">MariaDB 10.3 · Ubuntu 20.04</span></td><td>Base de datos y SO con soporte oficial finalizado. Entorno completo de ejecución fuera de ciclo de vida.</td><td>Una vulnerabilidad en el SO o la DB puede comprometer todos los datos de operativos y establecimientos.</td><td><span class="badge b-red" style="font-size:10px">Infraestructura EOL</span><div style="font-size:11px;color:var(--text3);margin-top:3px">Directriz CISO — ciclo de vida de infraestructura</div></td></tr>
+            <tr><td><span class="ver-current">Control de accesos</span></td><td>Sin documentación de permisos por perfil ni registro de acciones realizadas.</td><td>No es posible detectar accesos indebidos ni auditar quién modificó datos durante un operativo.</td><td><span class="badge b-orange" style="font-size:10px">Accesos no auditados</span><div style="font-size:11px;color:var(--text3);margin-top:3px">OWASP A01 — fallas en control de acceso</div></td></tr>
+            <tr><td><span class="ver-current">Documentación técnica</span></td><td>Sin documentación del sistema ni procesos. El conocimiento está concentrado en personas.</td><td>Ante rotación del equipo, el sistema queda sin soporte efectivo. Cualquier intervención parte de cero.</td><td><span class="badge b-orange" style="font-size:10px">Knowledge loss</span><div style="font-size:11px;color:var(--text3);margin-top:3px">Directriz CISO — continuidad operativa</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="alert-list" style="margin-top:12px">
+        <div class="alert-row"><div class="adot r"></div><span><strong>4 componentes Alta</strong> confirmados por relevamiento: MariaDB, PHP, Symfony y Node.js fuera de soporte oficial.</span></div>
+        <div class="alert-row"><div class="adot o"></div><span><strong>Acción de gerencia:</strong> Definir refactorización vs. nuevo sistema e iniciar contratación.</span></div>
+        <div class="alert-row"><div class="adot b"></div><span><strong>Responsable:</strong> Logística / UEICEE. Proveer feedback de SAVAP dentro de SGO antes de cerrar alcance.</span></div>
+      </div>
+    </div>
+
+    <!-- SRS -->
+    <div class="anx-card">
+      <div class="anx-header"><span class="anx-chip">SRS</span><span class="anx-name">Sistema de Relevamientos de Secciones</span><span class="badge b-red" style="margin-left:auto">🔴 Crítico</span></div>
+      <div class="anx-grid">
+        <div class="anx-field"><label>Situación actual</label><span>Stack idéntico al de SGO y también completamente fuera de soporte. Comparte el mismo entorno tecnológico deprecado y debe migrar en coordinación.</span></div>
+        <div class="anx-field"><label>Qué puede pasar si no se actúa</label><span>La desincronización con SGO puede comprometer la integridad de todos los relevamientos escolares. No es posible incorporar mejoras sin riesgo de regresión grave.</span></div>
+        <div class="anx-field"><label>Qué hay que hacer</label><span>Auditar servicios y definir plan de migración. La interoperabilidad con SGO es requisito no negociable en cualquier intervención.</span></div>
+      </div>
+      <div class="stack-wrap">
+        <div class="stack-section-title" style="display:flex;align-items:center;">Relevamiento de stack tecnológico<span class="stack-relevamiento-fecha">Servidor: az-lxsrs · 17/05/2026 · Script v6.4.1</span></div>
+        <table class="stack-table">
+          <thead><tr><th>Componente</th><th>Versión actual</th><th>Criticidad</th><th>Acción requerida</th></tr></thead>
+          <tbody>
+            <tr><td>Sistema Operativo</td><td><span class="ver-current">Ubuntu 20.04.1 LTS</span><div class="ver-suggested">Soporte finalizado abril 2025</div></td><td><span class="crit-alta">Alta</span></td><td>Actualizar a Ubuntu 22.04 LTS</td></tr>
+            <tr><td>Servidor Web</td><td><span class="ver-current">Apache 2.4.46</span></td><td><span class="crit-media">Media</span></td><td>Evaluar Apache 2.4.62</td></tr>
+            <tr><td>Base de datos</td><td><span class="ver-current">MariaDB 10.3.39</span><div class="ver-suggested">Fin de vida: mayo 2023</div></td><td><span class="crit-alta">Alta</span></td><td>Migrar a MariaDB 10.11 LTS</td></tr>
+            <tr><td>PHP</td><td><span class="ver-current">7.4.33</span><div class="ver-suggested">Sin soporte desde dic 2022</div></td><td><span class="crit-alta">Alta</span></td><td>Migrar a PHP 8.3</td></tr>
+            <tr><td>Framework</td><td><span class="ver-current">Symfony 4.4</span><div class="ver-suggested">Fin de vida: nov 2023</div></td><td><span class="crit-alta">Alta</span></td><td>Migrar a Symfony 6.4 LTS</td></tr>
+            <tr><td>Node.js</td><td><span class="ver-current">10.19.0</span><div class="ver-suggested">Sin soporte desde abril 2021</div></td><td><span class="crit-alta">Alta</span></td><td>Actualizar a Node.js 20 LTS</td></tr>
+            <tr><td>Composer</td><td><span class="ver-current">2.8.6</span></td><td><span class="crit-ok">Ok</span></td><td>Sin acción requerida</td></tr>
+            <tr><td>Recursos servidor</td><td colspan="3">Intel Xeon Platinum 8272CL · RAM: 1.0Gi / 3.8Gi · Disco: <strong>61%</strong> — monitorear</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="alert-list" style="margin-top:12px">
+        <div class="alert-row"><div class="adot r"></div><span><strong>Stack idéntico al de SGO</strong> — misma generación tecnológica, mismos riesgos. Migración debe planificarse en conjunto (OWASP A06 / Directriz CISO).</span></div>
+        <div class="alert-row"><div class="adot r"></div><span><strong>Disco al 61%</strong> — requiere monitoreo activo. PHP 7.4, Symfony 4.4, Node 10 y MariaDB 10.3 sin soporte oficial.</span></div>
+        <div class="alert-row"><div class="adot o"></div><span><strong>Acción de gerencia:</strong> Autorizar relevamiento completo y definir si se migra junto con SGO o por separado.</span></div>
+      </div>
+    </div>
+
+    <!-- SCIA -->
+    <div class="anx-card">
+      <div class="anx-header"><span class="anx-chip">SCIA</span><span class="anx-name">Corrección de Ítems Abiertos</span><span class="badge b-orange" style="margin-left:auto">🟠 Pausado — 90%</span></div>
+      <div class="anx-grid">
+        <div class="anx-field"><label>Situación actual</label><span>Sistema al 90% de desarrollo. PHP 8.2 y Laravel moderno, pero la base de datos sigue siendo MariaDB 10.3 deprecada. El servidor de desarrollo usa Ubuntu 20.04 sin soporte.</span></div>
+        <div class="anx-field"><label>Qué puede pasar si no se actúa</label><span>No llegar a producción antes de FEPBA/TESBA deja el proceso de corrección sin herramienta. Convivir versión vieja y nueva en paralelo genera riesgo de inconsistencias en datos de corrección.</span></div>
+        <div class="anx-field"><label>Qué hay que hacer</label><span>Completar aceptación, migrar imágenes de v1.0 y pasar a producción. Evaluar actualización de Laravel 10/11 y resolver MariaDB antes del pase.</span></div>
+      </div>
+      <div class="stack-wrap">
+        <div class="stack-section-title" style="display:flex;align-items:center;">Relevamiento de stack tecnológico<span class="stack-relevamiento-fecha">Servidor: az-lxsciadev · 17/05/2026 · Script v6.4.1</span></div>
+        <table class="stack-table">
+          <thead><tr><th>Componente</th><th>Versión actual</th><th>Criticidad</th><th>Acción requerida</th></tr></thead>
+          <tbody>
+            <tr><td>Sistema Operativo</td><td><span class="ver-current">Ubuntu 20.04.6 LTS</span><div class="ver-suggested">Soporte finalizado abril 2025</div></td><td><span class="crit-alta">Alta</span></td><td>Actualizar a Ubuntu 22.04 LTS antes del pase a PRD</td></tr>
+            <tr><td>Servidor Web</td><td><span class="ver-current">Apache 2.4.41</span></td><td><span class="crit-media">Media</span></td><td>Evaluar Apache 2.4.62</td></tr>
+            <tr><td>Base de datos</td><td><span class="ver-current">MariaDB 10.3.39</span><div class="ver-suggested">Fin de vida: mayo 2023</div></td><td><span class="crit-alta">Alta</span></td><td>Migrar a MariaDB 10.11 LTS</td></tr>
+            <tr><td>PHP</td><td><span class="ver-current">8.2.11</span></td><td><span class="crit-media">Media</span></td><td>Evaluar actualización a PHP 8.3</td></tr>
+            <tr><td>Framework</td><td><span class="ver-current">Laravel 9.11 + Mix 6.0.6</span></td><td><span class="crit-media">Media</span></td><td>Evaluar migración a Laravel 10/11</td></tr>
+            <tr><td>Composer</td><td><span class="ver-current">2.6.3</span></td><td><span class="crit-ok">Ok</span></td><td>Sin acción requerida</td></tr>
+            <tr><td>Recursos servidor</td><td colspan="3">Intel Xeon Platinum 8171M · RAM: 1.0Gi / 3.8Gi · Disco: <strong>32%</strong> — ok</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="alert-list" style="margin-top:12px">
+        <div class="alert-row"><div class="adot r"></div><span><strong>MariaDB 10.3 y Ubuntu 20.04 deprecados</strong> — aunque PHP y Laravel son modernos, el entorno base es un vector de riesgo activo que debe resolverse antes del pase a PRD (OWASP A06 / Directriz CISO).</span></div>
+        <div class="alert-row"><div class="adot o"></div><span><strong>Riesgo contractual:</strong> el proveedor puede dar por cumplidas sus obligaciones si UEICEE no formaliza las definiciones pendientes.</span></div>
+        <div class="alert-row"><div class="adot b"></div><span><strong>Responsable:</strong> UEICEE (pendiente asignación). Migración de imágenes v1.0 como prerequisito del pase a PRD.</span></div>
+      </div>
+    </div>
+
+    <!-- PEL -->
+    <div class="anx-card">
+      <div class="anx-header"><span class="anx-chip">PEL</span><span class="anx-name">Plataforma de Evaluaciones en Línea</span><span class="badge b-green" style="margin-left:auto">🟢 Estable</span></div>
+      <div class="anx-grid">
+        <div class="anx-field"><label>Situación actual</label><span>Sistema productivo con PHP 8.1 y Laravel estable. Sin embargo CentOS 7 sin soporte desde jun 2024 y MariaDB 10.3 deprecada. El principal riesgo no es el stack sino la ausencia de controles de acceso y trazabilidad sobre las evaluaciones.</span></div>
+        <div class="anx-field"><label>Qué puede pasar si no se actúa</label><span>Sin mecanismo de congelamiento de ítems y operativos, las evaluaciones pueden modificarse durante la toma. Sin registro de accesos no hay forma de detectar ni investigar irregularidades.</span></div>
+        <div class="anx-field"><label>Qué hay que hacer</label><span>Migrar CentOS y MariaDB, implementar congelamiento de operativos, activar registro de accesos y limpiar la base de datos de registros de prueba acumulados.</span></div>
+      </div>
+      <div class="stack-wrap">
+        <div class="stack-section-title" style="display:flex;align-items:center;">Relevamiento de stack tecnológico<span class="stack-relevamiento-fecha">Servidor: az-lxfepbatesbaprd · 18/05/2026 · Script v6.4.1</span></div>
+        <table class="stack-table">
+          <thead><tr><th>Componente</th><th>Versión actual</th><th>Criticidad</th><th>Acción requerida</th></tr></thead>
+          <tbody>
+            <tr><td>Sistema Operativo</td><td><span class="ver-current">CentOS Linux 7 (Core)</span><div class="ver-suggested">Soporte finalizado jun 2024</div></td><td><span class="crit-alta">Alta</span></td><td>Migrar a RHEL 8/9 o alternativa soportada</td></tr>
+            <tr><td>Servidor Web</td><td><span class="ver-current">No detectado</span></td><td><span class="crit-ok">Ok</span></td><td>Validar configuración de acceso web</td></tr>
+            <tr><td>Base de datos</td><td><span class="ver-current">MariaDB 10.3.36</span><div class="ver-suggested">Fin de vida: mayo 2023</div></td><td><span class="crit-alta">Alta</span></td><td>Migrar a MariaDB 10.11 LTS</td></tr>
+            <tr><td>PHP</td><td><span class="ver-current">8.1.11</span></td><td><span class="crit-media">Media</span></td><td>Evaluar actualización a PHP 8.3</td></tr>
+            <tr><td>Framework</td><td><span class="ver-current">Laravel 9.11 + Mix 6.0.6</span></td><td><span class="crit-media">Media</span></td><td>Evaluar migración a Laravel 10/11</td></tr>
+            <tr><td>Composer</td><td><span class="ver-current">2.4.3</span></td><td><span class="crit-ok">Ok</span></td><td>Sin acción requerida</td></tr>
+            <tr><td>Recursos servidor</td><td colspan="3">Intel Xeon Platinum 8272CL · RAM: 1.4G / 31G · Disco: <strong>40%</strong> — ok</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="alert-list" style="margin-top:12px">
+        <div class="alert-row"><div class="adot r"></div><span><strong>CentOS 7 sin soporte desde jun 2024</strong> y MariaDB 10.3 deprecada — servidor base como vector de riesgo activo (OWASP A06 / Directriz CISO).</span></div>
+        <div class="alert-row"><div class="adot r"></div><span><strong>Sin congelamiento de operativos ni registro de accesos</strong> — riesgo directo de modificación indebida de evaluaciones nacionales (OWASP A01 — control de acceso).</span></div>
+        <div class="alert-row"><div class="adot o"></div><span><strong>Base de datos con registros sucios</strong> de pruebas de campo mezclados con datos reales. Requiere limpieza antes del próximo operativo.</span></div>
+      </div>
+    </div>
+
+    <!-- SAVAP -->
+    <div class="anx-card">
+      <div class="anx-header"><span class="anx-chip">SAVAP</span><span class="anx-name">Asignación de Veedores y Aplicadores</span><span class="badge b-orange" style="margin-left:auto">🟠 Pausado</span></div>
+      <div class="anx-grid">
+        <div class="anx-field"><label>Situación actual</label><span>PHP 7.2 y Node 10 sin soporte, MariaDB 10.3 y Ubuntu 20.04 deprecados, Vue 2 EOL. Cinco componentes con criticidad Alta. Opera únicamente sobre producción sin ambiente de testing ni posibilidad de rollback.</span></div>
+        <div class="anx-field"><label>Qué puede pasar si no se actúa</label><span>Si falla durante un operativo Aprender, la asignación de veedores y aplicadores queda sin herramienta. Cualquier actualización va directo a producción sin validación previa.</span></div>
+        <div class="anx-field"><label>Qué hay que hacer</label><span>Crear ambiente de testing como primer paso. Luego refactorización con documentación completa. Validar integración con SGO antes de cualquier cambio.</span></div>
+      </div>
+      <div class="stack-wrap">
+        <div class="stack-section-title" style="display:flex;align-items:center;">Relevamiento de stack tecnológico<span class="stack-relevamiento-fecha">Servidor: az-lxsavap · 17/05/2026 · Script v6.4.3</span></div>
+        <table class="stack-table">
+          <thead><tr><th>Componente</th><th>Versión actual</th><th>Criticidad</th><th>Acción requerida</th></tr></thead>
+          <tbody>
+            <tr><td>Sistema Operativo</td><td><span class="ver-current">Ubuntu 20.04.1 LTS</span><div class="ver-suggested">Soporte finalizado abril 2025</div></td><td><span class="crit-alta">Alta</span></td><td>Actualizar a Ubuntu 22.04 LTS</td></tr>
+            <tr><td>Servidor Web</td><td><span class="ver-current">Apache 2.4.46</span></td><td><span class="crit-media">Media</span></td><td>Evaluar Apache 2.4.62</td></tr>
+            <tr><td>Base de datos</td><td><span class="ver-current">MariaDB 10.3.39</span><div class="ver-suggested">Fin de vida: mayo 2023</div></td><td><span class="crit-alta">Alta</span></td><td>Migrar a MariaDB 10.11 LTS</td></tr>
+            <tr><td>PHP</td><td><span class="ver-current">7.2.34</span><div class="ver-suggested">Sin soporte desde nov 2020</div></td><td><span class="crit-alta">Alta</span></td><td>Migrar a PHP 8.3</td></tr>
+            <tr><td>Framework / Frontend</td><td><span class="ver-current">Vue 2.5.22</span><div class="ver-suggested">EOL desde dic 2023</div></td><td><span class="crit-alta">Alta</span></td><td>Migrar a Vue 3 o framework alternativo</td></tr>
+            <tr><td>Node.js</td><td><span class="ver-current">10.19.0</span><div class="ver-suggested">Sin soporte desde abril 2021</div></td><td><span class="crit-alta">Alta</span></td><td>Actualizar a Node.js 20 LTS</td></tr>
+            <tr><td>Elasticsearch</td><td><span class="ver-current">Detectado — versión sin confirmar</span></td><td><span class="crit-media">Media</span></td><td>Validar versión instalada</td></tr>
+            <tr><td>Composer</td><td><span class="ver-current">2.1.11</span></td><td><span class="crit-ok">Ok</span></td><td>Sin acción requerida</td></tr>
+            <tr><td>Recursos servidor</td><td colspan="3">Intel Xeon Platinum 8370C · RAM: 1.3Gi / 3.8Gi · Disco: <strong style="color:var(--orange)">66%</strong> — atención</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="alert-list" style="margin-top:12px">
+        <div class="alert-row"><div class="adot r"></div><span><strong>5 componentes Alta</strong> — PHP 7.2, Vue 2, Node 10, MariaDB 10.3 y Ubuntu 20.04 sin soporte. Disco al 66% requiere atención (OWASP A06 / Directriz CISO).</span></div>
+        <div class="alert-row"><div class="adot r"></div><span><strong>Ambiente único PRD</strong> — cualquier actualización puede causar caída sin posibilidad de rollback (Directriz CISO — continuidad operativa).</span></div>
+        <div class="alert-row"><div class="adot o"></div><span><strong>Acción de gerencia:</strong> Definir si SAVAP continúa o se reemplaza con SGO. Habilitar ambiente de testing como prerequisito absoluto.</span></div>
+      </div>
+    </div>
+
+    <!-- BDU -->
+    <div class="anx-card">
+      <div class="anx-header"><span class="anx-chip">BDU</span><span class="anx-name">Biblioteca Digital de Evaluación</span><span class="badge b-yellow" style="margin-left:auto">🟡 Migración activa</span></div>
+      <div class="anx-grid">
+        <div class="anx-field"><label>Situación actual</label><span>Migración iniciada el 20/04/2026. PHP 7.2, Node 10 y Vue 2 sin soporte. Disco al 71% — nivel crítico de atención. La migración se ejecuta directamente sobre producción por falta de ambiente separado.</span></div>
+        <div class="anx-field"><label>Qué puede pasar si no se actúa</label><span>Operar la migración sobre producción sin entorno separado aumenta el riesgo de pérdida o corrupción de contenido. Disco al 71% con proceso activo es un riesgo operativo real.</span></div>
+        <div class="anx-field"><label>Qué hay que hacer</label><span>Solicitar ambiente de desarrollo a SSTEDU/AZURE con urgencia. Ajustar fechas del Gantt y confirmar hito de septiembre 2026.</span></div>
+      </div>
+      <div class="stack-wrap">
+        <div class="stack-section-title" style="display:flex;align-items:center;">Relevamiento de stack tecnológico<span class="stack-relevamiento-fecha">Servidor: az-lxbde · 17/05/2026 · Script v6.4.3</span></div>
+        <table class="stack-table">
+          <thead><tr><th>Componente</th><th>Versión actual</th><th>Criticidad</th><th>Acción requerida</th></tr></thead>
+          <tbody>
+            <tr><td>Sistema Operativo</td><td><span class="ver-current">Ubuntu 20.04.1 LTS</span><div class="ver-suggested">Soporte finalizado abril 2025</div></td><td><span class="crit-alta">Alta</span></td><td>Actualizar a Ubuntu 22.04 LTS</td></tr>
+            <tr><td>Servidor Web</td><td><span class="ver-current">Apache 2.4.46</span></td><td><span class="crit-media">Media</span></td><td>Evaluar Apache 2.4.62</td></tr>
+            <tr><td>Base de datos</td><td><span class="ver-current">MariaDB 10.3.39</span><div class="ver-suggested">Fin de vida: mayo 2023</div></td><td><span class="crit-alta">Alta</span></td><td>Migrar a MariaDB 10.11 LTS</td></tr>
+            <tr><td>PHP</td><td><span class="ver-current">7.2.34</span><div class="ver-suggested">Sin soporte desde nov 2020</div></td><td><span class="crit-alta">Alta</span></td><td>Migrar a PHP 8.3</td></tr>
+            <tr><td>Framework / Frontend</td><td><span class="ver-current">Vue 2.5.22 (bde + bde-nuevo)</span><div class="ver-suggested">EOL desde dic 2023</div></td><td><span class="crit-alta">Alta</span></td><td>Migrar a Vue 3 o framework alternativo</td></tr>
+            <tr><td>Node.js</td><td><span class="ver-current">10.19.0</span><div class="ver-suggested">Sin soporte desde abril 2021</div></td><td><span class="crit-alta">Alta</span></td><td>Evaluar Node.js 20 LTS</td></tr>
+            <tr><td>Elasticsearch</td><td><span class="ver-current">Detectado — versión sin confirmar</span></td><td><span class="crit-media">Media</span></td><td>Validar versión instalada</td></tr>
+            <tr><td>Composer</td><td><span class="ver-current">2.0.13</span></td><td><span class="crit-ok">Ok</span></td><td>Sin acción requerida</td></tr>
+            <tr><td>Recursos servidor</td><td colspan="3">Intel Xeon Platinum 8272CL · RAM: 1.0Gi / 3.8Gi · Disco: <strong style="color:var(--red)">71%</strong> — requiere acción inmediata</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="alert-list" style="margin-top:12px">
+        <div class="alert-row"><div class="adot r"></div><span><strong>5 componentes Alta + disco al 71%</strong> durante migración activa — combinación de mayor riesgo operativo del portfolio (OWASP A06 / Directriz CISO).</span></div>
+        <div class="alert-row"><div class="adot o"></div><span><strong>Migración sobre PRD sin ambiente separado</strong> — la falta de entorno de desarrollo es el principal riesgo inmediato del proyecto.</span></div>
+        <div class="alert-row"><div class="adot b"></div><span><strong>Responsable:</strong> Saulo / Gabriel (UEICEE). Gestionar ambiente con infraestructura es la acción más urgente.</span></div>
+      </div>
+    </div>
+
+    <!-- BTE -->
+    <div class="anx-card">
+      <div class="anx-header"><span class="anx-chip">BTE</span><span class="anx-name">Boletín Tu Escuela</span><span class="badge b-green" style="margin-left:auto">🟢 Estable</span></div>
+      <div class="anx-grid">
+        <div class="anx-field"><label>Situación actual</label><span>Sistema productivo funcionando. CentOS 7 sin soporte desde junio 2024 y PHP 7.2 sin actualizaciones desde noviembre 2020 son los principales riesgos. Laravel 6.0 y Composer 1.x también requieren actualización.</span></div>
+        <div class="anx-field"><label>Qué puede pasar si no se actúa</label><span>CentOS 7 y PHP 7.2 sin soporte exponen el servidor a vulnerabilidades activas sin parche disponible. Sin responsable asignado los datos erróneos del ciclo 2026 no se corrigen.</span></div>
+        <div class="anx-field"><label>Qué hay que hacer</label><span>Fix de datos del ciclo 2026, migración del SO y actualización de PHP 8.2+, Laravel 10+ y Composer v2. Asignar responsable de seguimiento formalmente.</span></div>
+      </div>
+      <div class="stack-wrap">
+        <div class="stack-section-title" style="display:flex;align-items:center;">Relevamiento de stack tecnológico<span class="stack-relevamiento-fecha">Servidor: az-lxboletin · 15/05/2026 · Script v1.7.0</span></div>
+        <table class="stack-table">
+          <thead><tr><th>Componente</th><th>Versión actual</th><th>Criticidad</th><th>Acción requerida</th></tr></thead>
+          <tbody>
+            <tr><td>Sistema Operativo</td><td><span class="ver-current">CentOS Linux 7 (Core)</span><div class="ver-suggested">Soporte finalizado jun 2024</div></td><td><span class="crit-alta">Alta</span></td><td>Migrar a RHEL 8/9 o alternativa soportada</td></tr>
+            <tr><td>Servidor Web</td><td><span class="ver-current">Apache 2.4.6</span><div class="ver-suggested">Versión muy antigua</div></td><td><span class="crit-media">Media</span></td><td>Actualizar a Apache 2.4.62</td></tr>
+            <tr><td>Base de datos</td><td><span class="ver-current">MariaDB 10.4.12</span></td><td><span class="crit-baja">Baja</span></td><td>Mantener / igualar en destino de migración</td></tr>
+            <tr><td>PHP</td><td><span class="ver-current">7.2.28</span><div class="ver-suggested">Sin soporte desde nov 2020</div></td><td><span class="crit-alta">Alta</span></td><td>Migrar a PHP 8.2+</td></tr>
+            <tr><td>Framework</td><td><span class="ver-current">Laravel 6.0</span><div class="ver-suggested">Sin soporte desde sep 2022</div></td><td><span class="crit-media">Media</span></td><td>Actualizar a Laravel 10+</td></tr>
+            <tr><td>Composer</td><td><span class="ver-current">1.9.3</span></td><td><span class="crit-media">Media</span></td><td>Actualizar a Composer v2.x LTS</td></tr>
+            <tr><td>Recursos servidor</td><td colspan="3">Intel Xeon Platinum 8171M · RAM: 934M / 1.9G · Disco: <strong>22%</strong> — ok</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="alert-list" style="margin-top:12px">
+        <div class="alert-row"><div class="adot r"></div><span><strong>CentOS 7 sin soporte desde jun 2024</strong> y PHP 7.2 sin actualizaciones desde nov 2020 — servidor con vectores de ataque activos sin parche (OWASP A06 / Directriz CISO).</span></div>
+        <div class="alert-row"><div class="adot o"></div><span><strong>Sin responsable asignado</strong> — datos erróneos del ciclo 2026 sin corregir. Riesgo de que lleguen a usuarios finales (OWASP A01).</span></div>
+        <div class="alert-row"><div class="adot b"></div><span><strong>Responsable:</strong> Leonardo / Gabriel (UEICEE). Contratación estimada 1 mes para fix + actualización de stack.</span></div>
+      </div>
+    </div>
+
+    <!-- RaNIE -->
+    <div class="anx-card">
+      <div class="anx-header"><span class="anx-chip">RaNIE</span><span class="anx-name">Nueva Infraestructura Escolar</span><span class="badge b-green" style="margin-left:auto">🟢 Estable</span></div>
+      <div class="anx-grid">
+        <div class="anx-field"><label>Situación actual</label><span>La plataforma más moderna del portfolio. Ubuntu 24.04 LTS, PHP 8.4, PostgreSQL 17.5 y stack completamente renovado con React 19 y NestJS. Sin deuda técnica de infraestructura identificada.</span></div>
+        <div class="anx-field"><label>Qué puede pasar si no se actúa</label><span>Sin mantenimiento preventivo las dependencias pueden acumular deuda. El chatbot IA y APIs externas están pausados hasta validar calidad de datos.</span></div>
+        <div class="anx-field"><label>Qué hay que hacer</label><span>Monitoreo periódico. Validar calidad de datos antes de reactivar chatbot y APIs. Confirmar instalación de Node.js si se requiere a nivel SO.</span></div>
+      </div>
+      <div class="stack-wrap">
+        <div class="stack-section-title" style="display:flex;align-items:center;">Relevamiento de stack tecnológico<span class="stack-relevamiento-fecha">Servidor: az-lxapranie-02 · 18/05/2026 · Script v6.4.4</span></div>
+        <table class="stack-table">
+          <thead><tr><th>Componente</th><th>Versión actual</th><th>Criticidad</th><th>Acción requerida</th></tr></thead>
+          <tbody>
+            <tr><td>Sistema Operativo</td><td><span class="ver-current">Ubuntu 24.04.2 LTS</span></td><td><span class="crit-ok">Ok</span></td><td>Sin acción — versión LTS vigente</td></tr>
+            <tr><td>Servidor Web</td><td><span class="ver-current">Nginx 1.24.0</span></td><td><span class="crit-ok">Ok</span></td><td>Sin acción requerida</td></tr>
+            <tr><td>Base de datos</td><td><span class="ver-current">PostgreSQL 17.5</span></td><td><span class="crit-ok">Ok</span></td><td>Sin acción requerida</td></tr>
+            <tr><td>PHP</td><td><span class="ver-current">8.4.7</span></td><td><span class="crit-ok">Ok</span></td><td>Sin acción requerida</td></tr>
+            <tr><td>Frontend</td><td><span class="ver-current">React 19.1.0</span></td><td><span class="crit-baja">Baja</span></td><td>Evaluar versión estable cuando disponible</td></tr>
+            <tr><td>Backend</td><td><span class="ver-current">NestJS 11.x</span></td><td><span class="crit-baja">Baja</span></td><td>Evaluar versión estable cuando disponible</td></tr>
+            <tr><td>Node.js</td><td><span class="ver-current">No instalado a nivel SO</span></td><td><span class="crit-baja">Baja</span></td><td>Validar si se requiere para nuevas funcionalidades</td></tr>
+            <tr><td>Recursos servidor</td><td colspan="3">Intel Xeon Platinum 8370C · RAM: 930Mi / 1.9Gi · Disco: <strong>42%</strong> — ok</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="alert-list" style="margin-top:12px">
+        <div class="alert-row"><div class="adot b"></div><span><strong>Stack completamente actualizado</strong> — único sistema del portfolio sin deuda técnica de infraestructura. Ubuntu 24.04, PHP 8.4 y PostgreSQL 17.5 en versiones LTS vigentes.</span></div>
+        <div class="alert-row"><div class="adot b"></div><span><strong>Chatbot IA pausado correctamente.</strong> No reanudar hasta auditoría de datos. Responsable: Saulo / Milena (UEICEE).</span></div>
+      </div>
+    </div>
+
+    <!-- BI -->
+    <div class="anx-card">
+      <div class="anx-header"><span class="anx-chip">BI</span><span class="anx-name">Banco de Ítems</span><span class="badge b-orange" style="margin-left:auto">🟠 Pausado — 75%</span></div>
+      <div class="anx-grid">
+        <div class="anx-field"><label>Situación actual</label><span>Sin relevamiento de stack disponible — el sistema no tiene ambiente activo. Desarrollo al 75% bloqueado por falta de definición de métricas psicométricas. Sin ambiente habilitado el proveedor no puede retomar.</span></div>
+        <div class="anx-field"><label>Qué puede pasar si no se actúa</label><span>La inversión desde Sep 2024 queda en riesgo. Si los requerimientos llegan tarde pueden invalidar funcionalidades del 75% ya construido.</span></div>
+        <div class="anx-field"><label>Qué hay que hacer</label><span>Definir métricas psicométricas, solicitar ambiente a infraestructura y retomar con el proveedor para completar el 25% restante.</span></div>
+      </div>
+      <div class="stack-wrap">
+        <div class="stack-section-title">Relevamiento de stack tecnológico</div>
+        <table class="stack-table"><tbody><tr><td style="color:var(--text3);font-style:italic;padding:14px 12px;">Sin relevamiento disponible — el sistema no tiene ambiente activo en producción. El relevamiento podrá realizarse una vez habilitado el entorno de desarrollo.</td></tr></tbody></table>
+      </div>
+      <div class="alert-list" style="margin-top:12px">
+        <div class="alert-row"><div class="adot o"></div><span><strong>Riesgo de inversión:</strong> cambios en requerimientos psicométricos pueden forzar reescritura de funcionalidades ya desarrolladas.</span></div>
+        <div class="alert-row"><div class="adot b"></div><span><strong>Responsable:</strong> UEICEE (pendiente asignación). Habilitar ambiente con infraestructura es la acción más urgente.</span></div>
+      </div>
+    </div>
+
+    <!-- Lime -->
+    <div class="anx-card">
+      <div class="anx-header"><span class="anx-chip">Lime</span><span class="anx-name">LimeSurvey — Plataforma de Encuestas</span><span class="badge b-green" style="margin-left:auto">🟢 Estable</span></div>
+      <div class="anx-grid">
+        <div class="anx-field"><label>Situación actual</label><span>Sistema actualizado y estable. Sin deuda técnica identificada. Riesgo mínimo.</span></div>
+        <div class="anx-field"><label>Qué puede pasar si no se actúa</label><span>Sin mantenimiento preventivo futuras actualizaciones de versión mayor pueden acumular incompatibilidades.</span></div>
+        <div class="anx-field"><label>Qué hay que hacer</label><span>Monitoreo periódico. Evaluar upgrades de versión mayor de LimeSurvey oportunamente.</span></div>
+      </div>
+      <div class="stack-wrap">
+        <div class="stack-section-title">Relevamiento de stack tecnológico</div>
+        <table class="stack-table"><tbody><tr><td style="color:var(--text3);font-style:italic;padding:14px 12px;">Sin relevamiento de stack en el ciclo actual. Dado el bajo riesgo identificado, se prioriza en ciclos futuros.</td></tr></tbody></table>
+      </div>
+      <div class="alert-list" style="margin-top:12px">
+        <div class="alert-row"><div class="adot b"></div><span><strong>Responsable:</strong> GabrielG (UEICEE). Sin acciones urgentes ni contratación externa requerida.</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- /tabs -->
+
+  <div class="footer">
+    <span>Dashboard Ciclo de Vida — Plataformas UEICEE · Ministerio de Educación GCBA · Coordinación IT</span>
+    <span style="display:flex;align-items:center;gap:10px;">
+      <span>Fuentes: Dashboard · Seguimiento · Detalle Proyectos · Relevamiento de Stack (8 plataformas)</span>
+      <span class="version-chip">v2.2 · Jun 2026</span>
+    </span>
+  </div>
+
+</main>
+
+<script>
+  function switchTab(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    btn.classList.add('active');
+  }
+</script>
+
+</body>
+</html>
