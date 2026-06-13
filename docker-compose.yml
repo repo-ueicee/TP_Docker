@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # Servidor Web (Apache)
+  web:
+    image: httpd:2.4
+    container_name: tp_apache_web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./html:/usr/local/apache2/htdocs/
+    networks:
+      - tp-network
+    depends_on:
+      - db
+
+  # Servidor de Base de Datos (MySQL)
+  db:
+    image: mysql:8.0
+    container_name: tp_mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: tp_database
+      MYSQL_USER: tp_user
+      MYSQL_PASSWORD: user_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - tp-network
+
+volumes:
+  db_data: # Persiste los datos de la BD aunque el contenedor se apague
+
+networks:
+  tp-network: # Red interna para que web y db se comuniquen
+    driver: bridge

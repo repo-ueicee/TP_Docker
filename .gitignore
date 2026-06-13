@@ -1,0 +1,2 @@
+# Ignorar datos locales de la base de datos de Docker
+.db_data/
